@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'chat_list_page.dart';
+import 'ChatListPage.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

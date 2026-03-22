@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'profile_setup_page.dart';
+import 'ProfileSetupPage.dart';
 
 class OtpPage extends StatefulWidget {
   final String phone;
