@@ -2,65 +2,65 @@ import 'package:flutter/material.dart';
 import 'HomePage.dart';
 import 'ProfileSetupPage.dart';
 import 'ChatListPage.dart';
-import 'RecentChats.dart';
 
 class MainHomeScreen extends StatefulWidget {
+  const MainHomeScreen({super.key});
+
   @override
-  _MainHomeScreenState createState() => _MainHomeScreenState();
+  State<MainHomeScreen> createState() => _MainHomeScreenState();
 }
 
 class _MainHomeScreenState extends State<MainHomeScreen> {
-
   int _selectedIndex = 0;
+  String userName = "";
 
-  final List<Widget> widgetOptions = [
-    HomePage(),
-    ProfileSetupPage(),
-    ChatListPage(),
-    RecentChats(),
-  ];
+  // 👇 Dynamic widget list (important)
+  List<Widget> get widgetOptions => [
+        HomePage(name: userName),
+        ProfileSetupPage(
+          onContinue: (name) {
+            setState(() {
+              userName = name;
+              _selectedIndex = 0; // switch to Home tab
+            });
+          },
+        ),
+        ChatListPage(),
+      ];
 
-  void _onItemTapped(int index){
+  void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Noted"),
+        title: const Text("JoshCode"),
       ),
-
-      body: widgetOptions.elementAt(_selectedIndex),
-
+      body: widgetOptions[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
-        showSelectedLabels: true,
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
         selectedItemColor: Colors.amber,
         unselectedItemColor: Colors.blueGrey,
-
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Home',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Profile',
           ),
-
           BottomNavigationBarItem(
             icon: Icon(Icons.chat),
             label: 'Chat',
           ),
         ],
-
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
       ),
     );
   }

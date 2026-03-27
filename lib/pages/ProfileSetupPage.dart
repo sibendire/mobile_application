@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
 class ProfileSetupPage extends StatefulWidget {
-  const ProfileSetupPage({super.key});
+  final Function(String) onContinue;
+
+  const ProfileSetupPage({super.key, required this.onContinue});
 
   @override
   State<ProfileSetupPage> createState() => _ProfileSetupPageState();
 }
 
 class _ProfileSetupPageState extends State<ProfileSetupPage> {
-
   final TextEditingController nameController = TextEditingController();
 
   void continueToApp() {
@@ -19,54 +20,50 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Welcome ${nameController.text}!")),
-    );
+    // 👇 Send name back to MainHomeScreen
+    widget.onContinue(nameController.text);
   }
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Set up profile",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
 
-              const SizedBox(height: 40),
-
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: "Your Name",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Set up profile",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
-
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: continueToApp,
-                  child: const Text("Continue"),
+                const SizedBox(height: 40),
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: "Your Name",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: continueToApp,
+                    child: const Text("Continue"),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

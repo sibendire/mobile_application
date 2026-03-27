@@ -5,8 +5,12 @@
 import FlutterMacOS
 import Foundation
 
-import file_picker
+import agora_rtc_engine
+import iris_method_channel
+import record_macos
 
 func RegisterGeneratedPlugins(registry: FlutterPluginRegistry) {
-  FilePickerPlugin.register(with: registry.registrar(forPlugin: "FilePickerPlugin"))
+  AgoraRtcNgPlugin.register(with: registry.registrar(forPlugin: "AgoraRtcNgPlugin"))
+  IrisMethodChannelPlugin.register(with: registry.registrar(forPlugin: "IrisMethodChannelPlugin"))
+  RecordMacOsPlugin.register(with: registry.registrar(forPlugin: "RecordMacOsPlugin"))
 }

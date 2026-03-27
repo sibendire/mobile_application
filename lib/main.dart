@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/phone_input_page.dart';
 import 'pages/mainHomeScreen.dart';
-import 'pages/ProfileSetupPage.dart';
 
 void main() {
   runApp(const MyApp());
@@ -19,8 +18,7 @@ class MyApp extends StatelessWidget {
 
       routes: {
         '/': (context) => const PhoneInputPage(),
-        '/profile': (context) => const ProfileSetupPage(),
-        '/home': (context) => MainHomeScreen(),
+        '/home': (context) => const MainHomeScreen(),
       },
     );
   }

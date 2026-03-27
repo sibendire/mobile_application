@@ -1,11 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:record/record.dart';
+import 'package:path_provider/path_provider.dart';
+
 import '../widgets/chat_bubble.dart';
 import '../models/message.dart';
+import 'call_page.dart';
 
 class ChatScreen extends StatefulWidget {
   final String name;
+
   const ChatScreen({super.key, required this.name});
 
   @override
@@ -13,143 +18,165 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final List<Message> messages = [
-    Message(
-      senderId: "1",
-      type: MessageType.text,
-      content: "Hello!",
-      time: DateTime.now(),
-    ),
-  ];
+  final List<Message> messages = [];
 
   final TextEditingController _controller = TextEditingController();
 
-  // 🔹 Pick an image file from the device
+  final AudioRecorder _recorder = AudioRecorder();
+  bool isRecording = false;
+  String? audioPath;
+
+  // 🔹 Pick image
   Future<void> pickImage() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-    );
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
 
     if (result != null && result.files.single.path != null) {
-      String path = result.files.single.path!;
       setState(() {
         messages.add(Message(
           senderId: "1",
           type: MessageType.image,
-          content: path,
+          content: result.files.single.path!,
           time: DateTime.now(),
         ));
       });
     }
   }
 
-  // 🔹 Send a text message
+  // 🔹 Send text
   void sendMessage() {
-    String text = _controller.text.trim();
-    if (text.isNotEmpty) {
+    if (_controller.text.trim().isEmpty) return;
+
+    setState(() {
+      messages.add(Message(
+        senderId: "1",
+        type: MessageType.text,
+        content: _controller.text.trim(),
+        time: DateTime.now(),
+      ));
+      _controller.clear();
+    });
+  }
+
+  // 🎙️ Record audio
+  Future<void> handleRecording() async {
+    if (!isRecording) {
+      if (await _recorder.hasPermission()) {
+        final dir = await getTemporaryDirectory();
+        audioPath =
+            '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+        await _recorder.start(
+          const RecordConfig(),
+          path: audioPath!,
+        );
+
+        setState(() => isRecording = true);
+      }
+    } else {
+      final path = await _recorder.stop();
+
       setState(() {
-        messages.add(Message(
-          senderId: "1",
-          type: MessageType.text,
-          content: text,
-          time: DateTime.now(),
-        ));
-        _controller.clear();
+        isRecording = false;
+
+        if (path != null) {
+          messages.add(Message(
+            senderId: "1",
+            type: MessageType.audio,
+            content: path,
+            time: DateTime.now(),
+          ));
+        }
       });
     }
   }
 
-  // 🔹 Build a message widget
+  // 🔹 Message UI
   Widget buildMessage(Message msg) {
     switch (msg.type) {
       case MessageType.text:
         return ChatBubble(text: msg.content);
 
+      case MessageType.image:
+        return Image.file(File(msg.content), width: 200);
+
       case MessageType.audio:
         return Container(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: const [
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.green.shade100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
               Icon(Icons.play_arrow),
               SizedBox(width: 8),
-              Text("Voice message (mock)"),
+              Text("Voice message"),
             ],
           ),
         );
-
-      case MessageType.image:
-        // Check if local file or network
-        if (msg.content.startsWith("assets/") || File(msg.content).existsSync()) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.file(File(msg.content), width: 200),
-          );
-        } else {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.network(msg.content, width: 200),
-          );
-        }
     }
-  
   }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _recorder.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.name)),
+      appBar: AppBar(
+        title: Text(widget.name),
+        actions: [
+          // 📞 Call button
+          IconButton(
+            icon: const Icon(Icons.video_call),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const CallPage(channelId: "test123"),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(16),
               itemCount: messages.length,
-              itemBuilder: (context, index) {
-                return Align(
-                  alignment: messages[index].senderId == "1"
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: buildMessage(messages[index]),
-                );
-              },
+              itemBuilder: (_, i) => buildMessage(messages[i]),
             ),
           ),
-          // 🔹 Input area
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.attach_file),
-                  onPressed: pickImage,
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.attach_file),
+                onPressed: pickImage,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration:
+                      const InputDecoration(hintText: "Type message"),
                 ),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration:
-                        const InputDecoration(hintText: "Type a message"),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.mic),
-                  onPressed: () {
-                    // Add mock audio message
-                    setState(() {
-                      messages.add(Message(
-                        senderId: "1",
-                        type: MessageType.audio,
-                        content: "audio_local_mock",
-                        time: DateTime.now(),
-                      ));
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: sendMessage,
-                ),
-              ],
-            ),
-          ),
+              ),
+              IconButton(
+                icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                onPressed: handleRecording,
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: sendMessage,
+              ),
+            ],
+          )
         ],
       ),
     );
